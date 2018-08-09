@@ -1,0 +1,10 @@
+{
+    "db": {
+        "name": "gitlab_crawler",
+        "host": "localhost",
+        "user": {
+            "username": "glc",
+            "password": "p@ss"
+        }
+    }
+}
