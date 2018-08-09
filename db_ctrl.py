@@ -1,4 +1,5 @@
 import json
+import os.path
 from sys import stderr
 from traceback import format_exc
 
@@ -8,7 +9,7 @@ from MySQLdb.cursors import DictCursor
 
 class DBCtrl(object):
     """Database Controller"""
-    config_file = "config.json"
+    config_file = os.path.join(os.path.dirname(__file__), "config.json")
     encoding = "utf8mb4"
     DATABASE_NOT_FOUND = 1049
     DUPLICATE_ENTRY = 1062
