@@ -61,7 +61,7 @@ class DBCtrl(object):
 
         Not Implemented.
         """
-        raise NotImplementedError("INSERT is not implemendet in DBCtrl.")
+        raise NotImplementedError("INSERT is not implemented in DBCtrl.")
 
     def get_rows(self, table, columns=[], values={}, rerais=False):
         """Get list of rows from a table of database."""
@@ -120,4 +120,4 @@ class DBCtrl(object):
 
         Not Implemented.
         """
-        raise NotImplementedError("UPDATE is not implemendet in DBCtrl.")
+        raise NotImplementedError("UPDATE is not implemented in DBCtrl.")
