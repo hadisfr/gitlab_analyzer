@@ -16,12 +16,10 @@ before_script:
   - pip install -r requirements.txt
 
 stages:
-  - test
-  - run
-  - deploy
+  - lint
 
-test:
-  stage: test
+lint:
+  stage: lint
   script:
     - pip install flake8
     - flake8 --ignore=E501 --exclude=.svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg,.env
