@@ -25,17 +25,17 @@ class GraphAnalyzer():
 
         self.db_ctrl = DBCtrl()
 
-    def plot_graph(self, graph, path, figsize):
+    def plot_graph(self, graph, path, labels, figsize):
         """Plot a graph to a file."""
         plt.figure(figsize=figsize)
         ax = plt.subplot(1, 1, 1)
         ax.axis("off")
-        nx.draw_networkx(graph, with_labels=True)
+        nx.draw_networkx(graph, with_labels=True, labels=labels, node_size=9000, font_color='w')
         plt.savefig("res/%s.svg" % path)
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
-        graph = self.get_forks_graph()
+        graph, labels = self.get_forks_graph()
         print("## Fork Chains")
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)))
 
@@ -49,7 +49,9 @@ class GraphAnalyzer():
                 max_longest_path[1].append(root)
         print("Longest chain: length: %d, root of components: %s" % (max_longest_path))
 
-        self.plot_graph(graph, self.output_files['fork_chains'], (30, 30))
+        self.plot_graph(graph, self.output_files['fork_chains'], labels, (300, 300))
+
+        nx.write_graphml(graph, "res/%s" % self.output_files['fork_chains'])
         print("")
 
     def get_forks_graph(self):
@@ -59,4 +61,10 @@ class GraphAnalyzer():
             graph.add_node(rel['source'])
             graph.add_node(rel['destination'])
             graph.add_edge(rel['source'], rel['destination'])
-        return graph
+        labels = {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
+            "projects",
+            ["id", "owner_path", "path"],
+            "id in (%s)" % ", ".join("%s" for i in range(len(graph.nodes))),
+            graph.nodes
+        )}
+        return graph, labels
