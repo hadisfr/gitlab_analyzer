@@ -55,7 +55,7 @@ class GraphAnalyzer():
     def get_forks_graph(self):
         """Get forks graph from DB."""
         graph = nx.DiGraph()
-        for rel in self.db_ctrl.get_rows("forks", values={"source": 13083}):
+        for rel in self.db_ctrl.get_rows("forks"):
             graph.add_node(rel['source'])
             graph.add_node(rel['destination'])
             graph.add_edge(rel['source'], rel['destination'])
