@@ -1,4 +1,7 @@
 {
+    "output":{
+        "fork_chains": "fork_chains"
+    },
     "db": {
         "name": "gitlab_crawler",
         "host": "localhost",
