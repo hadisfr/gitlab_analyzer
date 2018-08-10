@@ -36,8 +36,8 @@ class GraphAnalyzer():
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
         graph, labels = self.get_forks_graph()
-        print("## Fork Chains")
-        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)))
+        print("## Fork Chains", flush=True)
+        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), flush=True)
 
         max_longest_path = (0, [])
         for component in (graph.subgraph(c) for c in nx.weakly_connected_components(graph)):
@@ -47,12 +47,12 @@ class GraphAnalyzer():
                 max_longest_path = (longest_path_length, [root])
             elif longest_path_length == max_longest_path[0]:
                 max_longest_path[1].append(root)
-        print("Longest chain: length: %d, root of components: %s" % (max_longest_path))
+        print("Longest chain: length: %d, root of components: %s" % (max_longest_path), flush=True)
 
         self.plot_graph(graph, self.output_files['fork_chains'], labels, (300, 300))
 
         nx.write_graphml(graph, "res/%s" % self.output_files['fork_chains'])
-        print("")
+        print("", flush=True)
 
     def get_forks_graph(self):
         """Get forks graph from DB."""
