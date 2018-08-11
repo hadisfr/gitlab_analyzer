@@ -31,7 +31,10 @@ class GraphAnalyzer():
         ax = plt.subplot(1, 1, 1)
         ax.axis("off")
         nx.draw_networkx(graph, with_labels=True, labels=labels, node_size=9000, font_color='w')
-        plt.savefig("res/%s.svg" % path)
+        plt.savefig(os.path.join(os.path.dirname(__file__), "res/%s.svg" % path))
+
+    def save_graph(self, graph, path):
+        nx.write_graphml(graph, os.path.join(os.path.dirname(__file__), "res/%s" % path))
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
@@ -50,8 +53,7 @@ class GraphAnalyzer():
         print("Longest chain: length: %d, root of components: %s" % (max_longest_path), flush=True)
 
         self.plot_graph(graph, self.output_files['fork_chains'], labels, (300, 300))
-
-        nx.write_graphml(graph, "res/%s" % self.output_files['fork_chains'])
+        self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
 
     def get_forks_graph(self):
