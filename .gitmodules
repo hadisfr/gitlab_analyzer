@@ -1,0 +1,3 @@
+[submodule "pybiclique"]
+	path = pybiclique
+	url = https://github.com/hadisfr/pybiclique.git
