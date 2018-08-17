@@ -51,22 +51,24 @@ class GraphAnalyzer():
         print("## Fork Chains", flush=True)
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), flush=True)
 
-        max_longest_path = (0, [])
-        for component in (graph.subgraph(c) for c in nx.weakly_connected_components(graph)):
-            root = self.get_digraph_root(component)
-            longest_path_length = nx.dag_longest_path_length(component)
-            if longest_path_length > max_longest_path[0]:
-                max_longest_path = (longest_path_length, [root])
-            elif longest_path_length == max_longest_path[0]:
-                max_longest_path[1].append(root)
-        print("Longest chain (length: %d):" % max_longest_path[0], flush=True)
+        components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
+            graph.subgraph(c) for c in nx.weakly_connected_components(graph)
+        ]]
+        components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
+        print("Longest chain (length: %d):" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
+              flush=True)
 
-        for component in [graph.subgraph(component) for component in nx.weakly_connected_components(graph)
-                          if component.intersection(max_longest_path[1])]:
-            labels = self.get_projects_labels(component)
-            root = labels[self.get_digraph_root(component)].replace('\n', '/')
+        for component in components_by_longest_path:
+            if component[0] < components_by_longest_path[0][0]:
+                break
+            labels = self.get_projects_labels(component[1])
+            root = labels[self.get_digraph_root(component[1])].replace('\n', '/')
             print("* %s" % root, flush=True)
-            self.plot_graph(component, "%s_%s" % (self.output_files['fork_chains'], quote_plus(root)), labels, (20, 20))
+            self.plot_graph(
+                component[1],
+                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root)),
+                labels, (20, 20)
+            )
         print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
