@@ -39,7 +39,8 @@ class GraphAnalyzer():
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
-        graph, labels = self.get_forks_graph()
+        graph = self.get_forks_graph()
+        labels = self.get_projects_labels(graph)
         print("## Fork Chains", flush=True)
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), flush=True)
 
@@ -64,13 +65,15 @@ class GraphAnalyzer():
             graph.add_node(rel['source'])
             graph.add_node(rel['destination'])
             graph.add_edge(rel['source'], rel['destination'])
-        labels = {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
+        return graph
+
+    def get_projects_labels(self, graph):
+        return {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
             "projects",
             ["id", "owner_path", "path"],
             "id in (%s)" % ", ".join("%s" for i in range(len(graph.nodes))),
             graph.nodes
         )}
-        return graph, labels
 
     def analyze_bipartite_graph(self):
         """Analyze bipartite graph of users-projects relations."""
