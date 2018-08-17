@@ -1,6 +1,7 @@
 import json
 import os.path
 from sys import stderr
+from urllib.parse import quote_plus
 
 import networkx as nx
 from matplotlib import use as matplotlib_select_backedn
@@ -26,35 +27,48 @@ class GraphAnalyzer():
 
         self.db_ctrl = DBCtrl()
 
-    def plot_graph(self, graph, path, labels, figsize):
+    def plot_graph(self, graph, path, labels, figsize, pos=None):
         """Plot a graph to a file."""
         plt.figure(figsize=figsize)
         ax = plt.subplot(1, 1, 1)
         ax.axis("off")
-        nx.draw_networkx(graph, with_labels=True, labels=labels, node_size=9000, font_color='w')
-        plt.savefig(os.path.join(os.path.dirname(__file__), "res', '%s.svg" % path))
+        if not pos:
+            pos = nx.drawing.nx_agraph.graphviz_layout(graph)
+        nx.draw_networkx(graph, pos=pos, with_labels=True, labels=labels, node_size=9000, arrowsize=30, font_color='w')
+        plt.savefig(os.path.join(os.path.dirname(__file__), "res", "%s.svg" % path))
 
     def save_graph(self, graph, path):
+        """Save a grpah in graphml format."""
         nx.write_graphml(graph, os.path.join(os.path.dirname(__file__), "res/%s" % path))
+
+    def get_digraph_root(self, digraph):
+        """Get root of a digraph."""
+        return [node for node in digraph.nodes if digraph.in_degree(node) == 0][0]
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
         graph = self.get_forks_graph()
-        labels = self.get_projects_labels(graph)
         print("## Fork Chains", flush=True)
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), flush=True)
 
         max_longest_path = (0, [])
         for component in (graph.subgraph(c) for c in nx.weakly_connected_components(graph)):
-            root = [node for node in component.nodes if component.in_degree(node) == 0][0]
+            root = self.get_digraph_root(component)
             longest_path_length = nx.dag_longest_path_length(component)
             if longest_path_length > max_longest_path[0]:
                 max_longest_path = (longest_path_length, [root])
             elif longest_path_length == max_longest_path[0]:
                 max_longest_path[1].append(root)
-        print("Longest chain: length: %d, root of components: %s" % (max_longest_path), flush=True)
+        print("Longest chain (length: %d):" % max_longest_path[0], flush=True)
 
-        self.plot_graph(graph, self.output_files['fork_chains'], labels, (300, 300))
+        for component in [graph.subgraph(component) for component in nx.weakly_connected_components(graph)
+                          if component.intersection(max_longest_path[1])]:
+            labels = self.get_projects_labels(component)
+            root = labels[self.get_digraph_root(component)].replace('\n', '/')
+            print("* %s" % root, flush=True)
+            self.plot_graph(component, "%s_%s" % (self.output_files['fork_chains'], quote_plus(root)), labels, (20, 20))
+        print("", flush=True)
+
         self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
 
