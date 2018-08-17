@@ -165,17 +165,22 @@ class GraphAnalyzer():
             biclique_nodes = biclique_analyzer.bicliques[i]
             print("%d. %dx%d" % (i + 1, len(biclique_nodes[0]), len(biclique_nodes[1])))
             biclique = graph.subgraph(chain(*biclique_nodes))
+            print("    * Users", flush=True)
+            user_labels = {user_to_id(user): label for (user, label) in self.get_users_labels(
+                [id_to_user(node) for node in biclique_nodes[0]]
+            ).items()}
+            for user in user_labels:
+                print("        * %s" % user_labels[user])
+            print("    * Projects", flush=True)
+            project_labels = {project_to_id(project): label for (project, label) in self.get_projects_labels(
+                [id_to_project(node) for node in biclique_nodes[1]]
+            ).items()}
+            for project in project_labels:
+                print("        * %s" % project_labels[project].replace('\n', '/'))
             self.plot_graph(
                 biclique,
                 "%s_%d" % (self.output_files['bipartite'], i),
-                {
-                    **{user_to_id(user): label for (user, label) in self.get_users_labels(
-                        [id_to_user(node) for node in biclique_nodes[0]]
-                    ).items()},
-                    **{project_to_id(project): label for (project, label) in self.get_projects_labels(
-                        [id_to_project(node) for node in biclique_nodes[1]]
-                    ).items()}
-                },
+                {**user_labels, **project_labels},
                 (30, 100),
                 pos=nx.drawing.layout.bipartite_layout(biclique, biclique_nodes[0]),
                 node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
