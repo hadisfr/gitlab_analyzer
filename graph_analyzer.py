@@ -104,6 +104,6 @@ class GraphAnalyzer():
         )
         biclique_analyzer.calculate_bicliques(
             [[rel['user'], rel['project']]
-             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'], values={'project': 7076864})]
+             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])]
         )
-        biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]))
+        biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]), reverse=True)
