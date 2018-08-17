@@ -60,25 +60,7 @@ class GraphAnalyzer():
         components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
             graph.subgraph(c) for c in nx.weakly_connected_components(graph)
         ]]
-
         components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
-        print("### Longest chain\n\nlength: %d" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
-              end="\n\n", flush=True)
-        for component in components_by_longest_path:
-            if component[0] < components_by_longest_path[0][0]:
-                break
-            labels = self.get_projects_labels(component[1])
-            root = self.get_digraph_root(component[1])
-            root_label = labels[root].replace('\n', '/')
-            print("* %s" % root_label, flush=True)
-            self.plot_graph(
-                component[1],
-                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root_label)),
-                labels,
-                (20, 20),
-                node_color=['b' if node != root else 'k' for node in component[1].nodes]
-            )
-        print("", flush=True)
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality in ['degree_centrality', 'eigenvector_centrality']:
@@ -99,6 +81,24 @@ class GraphAnalyzer():
                             node_color=['g' if n != node else 'k' for n in component.nodes]
                         )
             print("", flush=True)
+
+        print("### Longest chain\n\nlength: %d" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
+              end="\n\n", flush=True)
+        for component in components_by_longest_path:
+            if component[0] < components_by_longest_path[0][0]:
+                break
+            labels = self.get_projects_labels(component[1])
+            root = self.get_digraph_root(component[1])
+            root_label = labels[root].replace('\n', '/')
+            print("* %s" % root_label, flush=True)
+            self.plot_graph(
+                component[1],
+                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root_label)),
+                labels,
+                (20, 20),
+                node_color=['b' if node != root else 'k' for node in component[1].nodes]
+            )
+        print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
