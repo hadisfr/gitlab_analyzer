@@ -54,10 +54,10 @@ class GraphAnalyzer():
         components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
             graph.subgraph(c) for c in nx.weakly_connected_components(graph)
         ]]
-        components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
-        print("Longest chain (length: %d):" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
-              end="\n\n", flush=True)
 
+        components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
+        print("### Longest chain\n\nlength: %d" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
+              end="\n\n", flush=True)
         for component in components_by_longest_path:
             if component[0] < components_by_longest_path[0][0]:
                 break
@@ -70,6 +70,26 @@ class GraphAnalyzer():
                 labels, (20, 20)
             )
         print("", flush=True)
+
+        print("### Centrality", end="\n\n", flush=True)
+        for centrality in ['degree_centrality', 'eigenvector_centrality']:
+            print("#### %s" % centrality, end="\n\n", flush=True)
+            nodes_by_centrality = sorted(nx.__getattribute__(centrality)(graph).items(), key=lambda pair: pair[1], reverse=True)
+            print("centrality = %f" % nodes_by_centrality[0][1] if len(nodes_by_centrality) else 0, end="\n\n", flush=True)
+            for node in nodes_by_centrality:
+                if node[1] < nodes_by_centrality[0][1]:
+                    break
+                for component in (component[1] for component in components_by_longest_path):
+                    if node[0] in component.nodes:
+                        labels = self.get_projects_labels(component)
+                        node_label = labels[node[0]].replace('\n', '/')
+                        print("* %s" % node_label, flush=True)
+                        self.plot_graph(
+                            component,
+                            "%s_%s" % (self.output_files['fork_chains'], quote_plus(node_label)),
+                            labels, (100, 100)
+                        )
+                print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
