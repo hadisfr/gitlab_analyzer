@@ -80,7 +80,7 @@ class GraphAnalyzer():
                             "%s_%s" % (self.output_files['fork_chains'], quote_plus(node_label)),
                             component_labels,
                             (100, 100),
-                            node_color=['g' if n != node else 'k' for n in component.nodes]
+                            node_color=['g' if n != node[0] else 'k' for n in component.nodes]
                         )
             print("", flush=True)
 
@@ -176,7 +176,7 @@ class GraphAnalyzer():
                         [id_to_project(node) for node in biclique_nodes[1]]
                     ).items()}
                 },
-                (20, 20),
+                (30, 100),
                 pos=nx.drawing.layout.bipartite_layout(biclique, biclique_nodes[0]),
                 node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
             )
