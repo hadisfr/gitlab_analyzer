@@ -66,9 +66,11 @@ class GraphAnalyzer():
         for centrality in ['degree_centrality', 'eigenvector_centrality']:
             print("#### %s" % centrality, end="\n\n", flush=True)
             nodes_by_centrality = sorted(nx.__getattribute__(centrality)(graph).items(), key=lambda pair: pair[1], reverse=True)
-            labels = self.get_projects_labels([node[0] for node in nodes_by_centrality[:10]])
+            labels = self.get_projects_labels([node[0] for node in nodes_by_centrality])
+            for i in range(len(nodes_by_centrality)):
+                node = nodes_by_centrality[i]
+                print("%d. %s (%f)" % (i + 1, labels[node[0]].replace('\n', '/'), node[1]), flush=True)
             for node in nodes_by_centrality[:10]:
-                print("* %s (%f)" % (labels[node[0]].replace('\n', '/'), node[1]), flush=True)
                 for component in (component[1] for component in components_by_longest_path):
                     if node[0] in component.nodes:
                         component_labels = self.get_projects_labels(component)
