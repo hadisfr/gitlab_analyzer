@@ -48,15 +48,15 @@ class GraphAnalyzer():
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
         graph = self.get_forks_graph()
-        print("## Fork Chains", flush=True)
-        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), flush=True)
+        print("## Fork Chains", end="\n\n", flush=True)
+        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
             graph.subgraph(c) for c in nx.weakly_connected_components(graph)
         ]]
         components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
         print("Longest chain (length: %d):" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
-              flush=True)
+              end="\n\n", flush=True)
 
         for component in components_by_longest_path:
             if component[0] < components_by_longest_path[0][0]:
@@ -93,9 +93,10 @@ class GraphAnalyzer():
 
     def analyze_bipartite_graph(self):
         """Analyze bipartite graph of users-projects relations."""
-        print("## Bipartite Graph of Users-Projects Relations", flush=True)
+        print("## Bipartite Graph of Users-Projects Relations", end="\n\n", flush=True)
 
-        print("### Maximum Bicliques", flush=True)
+        print("### Maximum Bicliques", end="\n\n", flush=True)
+        print("```", flush=True)
         biclique_analyzer = MaximalBicliques(
             input_addr=os.path.join('res', 'bipartite.txt'),
             output_addr=os.path.join('res', 'bipartite.bicliques.txt'),
@@ -107,3 +108,5 @@ class GraphAnalyzer():
              for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])]
         )
         biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]), reverse=True)
+        print("```", flush=True)
+        print("", flush=True)

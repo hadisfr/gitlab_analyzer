@@ -17,7 +17,7 @@ def main():
     args_group.add_argument("--fork-chains", "-f", help="analyze chains of forks", action='store_true')
     args_group.add_argument("--bipartite", "-b", help="analyze bipartite graph of users-projects relations", action='store_true')
     args = vars(args_parser.parse_args())
-    print("# GitLab Network", end="\n\n")
+    print("# GitLab Network", end="\n\n", flush=True)
     if args['fork_chains']:
         analyzer.analyze_fork_chains()
     if args['bipartite']:
