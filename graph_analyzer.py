@@ -75,21 +75,19 @@ class GraphAnalyzer():
         for centrality in ['degree_centrality', 'eigenvector_centrality']:
             print("#### %s" % centrality, end="\n\n", flush=True)
             nodes_by_centrality = sorted(nx.__getattribute__(centrality)(graph).items(), key=lambda pair: pair[1], reverse=True)
-            print("centrality = %f" % nodes_by_centrality[0][1] if len(nodes_by_centrality) else 0, end="\n\n", flush=True)
-            for node in nodes_by_centrality:
-                if node[1] < nodes_by_centrality[0][1]:
-                    break
+            labels = self.get_projects_labels([node[0] for node in nodes_by_centrality[:10]])
+            for node in nodes_by_centrality[:10]:
+                print("* %s (%f)" % (labels[node[0]].replace('\n', '/'), node[1]), flush=True)
                 for component in (component[1] for component in components_by_longest_path):
                     if node[0] in component.nodes:
                         labels = self.get_projects_labels(component)
                         node_label = labels[node[0]].replace('\n', '/')
-                        print("* %s" % node_label, flush=True)
                         self.plot_graph(
                             component,
                             "%s_%s" % (self.output_files['fork_chains'], quote_plus(node_label)),
                             labels, (100, 100)
                         )
-                print("", flush=True)
+            print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
@@ -103,12 +101,14 @@ class GraphAnalyzer():
             graph.add_edge(rel['source'], rel['destination'])
         return graph
 
-    def get_projects_labels(self, graph):
+    def get_projects_labels(self, nodes):
+        if isinstance(nodes, nx.classes.Graph):
+            nodes = nodes.nodes
         return {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
             "projects",
             ["id", "owner_path", "path"],
-            "id in (%s)" % ", ".join("%s" for i in range(len(graph.nodes))),
-            graph.nodes
+            "id in (%s)" % ", ".join("%s" for i in range(len(nodes))),
+            nodes
         )}
 
     def analyze_bipartite_graph(self):
