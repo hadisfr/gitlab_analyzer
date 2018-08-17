@@ -2,6 +2,7 @@ import json
 import os.path
 from sys import stderr
 from urllib.parse import quote_plus
+from random import randrange
 
 import networkx as nx
 from matplotlib import use as matplotlib_select_backedn
@@ -27,14 +28,18 @@ class GraphAnalyzer():
 
         self.db_ctrl = DBCtrl()
 
-    def plot_graph(self, graph, path, labels, figsize, pos=None):
+    def plot_graph(self, graph, path, labels, figsize, pos=None, node_color=None):
         """Plot a graph to a file."""
         plt.figure(figsize=figsize)
         ax = plt.subplot(1, 1, 1)
         ax.axis("off")
+        if not node_color:
+            color_pool = ['r', 'g', 'b', 'm']
+            node_color = [color_pool[randrange(0, len(color_pool))] for node in graph.nodes]
         if not pos:
             pos = nx.drawing.nx_agraph.graphviz_layout(graph)
-        nx.draw_networkx(graph, pos=pos, with_labels=True, labels=labels, node_size=9000, arrowsize=30, font_color='w')
+        nx.draw_networkx(graph, pos=pos, with_labels=True, labels=labels, node_size=9000, arrowsize=30,
+                         font_color='w', node_color=node_color)
         plt.savefig(os.path.join(os.path.dirname(__file__), "res", "%s.svg" % path))
 
     def save_graph(self, graph, path):
@@ -62,12 +67,15 @@ class GraphAnalyzer():
             if component[0] < components_by_longest_path[0][0]:
                 break
             labels = self.get_projects_labels(component[1])
-            root = labels[self.get_digraph_root(component[1])].replace('\n', '/')
-            print("* %s" % root, flush=True)
+            root = self.get_digraph_root(component[1])
+            root_label = labels[root].replace('\n', '/')
+            print("* %s" % root_label, flush=True)
             self.plot_graph(
                 component[1],
-                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root)),
-                labels, (20, 20)
+                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root_label)),
+                labels,
+                (20, 20),
+                node_color=['b' if node != root else 'k' for node in component[1].nodes]
             )
         print("", flush=True)
 
@@ -85,7 +93,9 @@ class GraphAnalyzer():
                         self.plot_graph(
                             component,
                             "%s_%s" % (self.output_files['fork_chains'], quote_plus(node_label)),
-                            labels, (100, 100)
+                            labels,
+                            (100, 100),
+                            node_color=['g' if n != node else 'k' for n in component.nodes]
                         )
             print("", flush=True)
 
