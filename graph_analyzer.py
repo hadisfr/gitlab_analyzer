@@ -6,6 +6,7 @@ import networkx as nx
 from matplotlib import use as matplotlib_select_backedn
 matplotlib_select_backedn('Agg')  # noqa
 from matplotlib import pyplot as plt
+from pybiclique import MaximalBicliques
 
 from db_ctrl import DBCtrl
 
@@ -70,3 +71,20 @@ class GraphAnalyzer():
             graph.nodes
         )}
         return graph, labels
+
+    def analyze_bipartite_graph(self):
+        """Analyze bipartite graph of users-projects relations."""
+        print("## Bipartite Graph of Users-Projects Relations", flush=True)
+
+        print("### Maximum Bicliques", flush=True)
+        biclique_analyzer = MaximalBicliques(
+            input_addr='res/bipartite.txt',
+            output_addr='res/bipartite.bicliques.txt',
+            output_size_addr='res/bipartite.bicliques_size.txt',
+            store_temps=True
+        )
+        biclique_analyzer.calculate_bicliques(
+            [[rel['user'], rel['project']]
+             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'], values={'project': 7076864})]
+        )
+        biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]))

@@ -15,10 +15,13 @@ def main():
     )
     args_group = args_parser.add_mutually_exclusive_group(required=True)
     args_group.add_argument("--fork-chains", "-f", help="analyze chains of forks", action='store_true')
+    args_group.add_argument("--bipartite", "-b", help="analyze bipartite graph of users-projects relations", action='store_true')
     args = vars(args_parser.parse_args())
     print("# GitLab Network", end="\n\n")
     if args['fork_chains']:
         analyzer.analyze_fork_chains()
+    if args['bipartite']:
+        analyzer.analyze_bipartite_graph()
 
 
 if __name__ == '__main__':
