@@ -151,9 +151,12 @@ class GraphAnalyzer():
         print("### Maximum Bicliques", end="\n\n", flush=True)
         print("```", flush=True)
         biclique_analyzer = MaximalBicliques(
-            input_addr=os.path.join('res', '%s_bipartite.txt' % self.output_files['bipartite']),
-            output_addr=os.path.join('res', '%s.bicliques.txt' % self.output_files['bipartite']),
-            output_size_addr=os.path.join('res', '%s.bicliques_size.txt' % self.output_files['bipartite']),
+            input_addr=os.path.join(os.path.dirname(__file__), 'res',
+                                    '%s_bipartite.txt' % self.output_files['bipartite']),
+            output_addr=os.path.join(os.path.dirname(__file__), 'res',
+                                     '%s.bicliques.txt' % self.output_files['bipartite']),
+            output_size_addr=os.path.join(os.path.dirname(__file__), 'res',
+                                          '%s.bicliques_size.txt' % self.output_files['bipartite']),
             store_temps=True
         )
         biclique_analyzer.calculate_bicliques([list(edge) for edge in graph.edges])
