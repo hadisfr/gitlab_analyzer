@@ -52,8 +52,8 @@ class GraphAnalyzer():
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
-        graph = self.get_forks_graph()
         print("## Fork Chains", end="\n\n", flush=True)
+        graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
@@ -102,15 +102,6 @@ class GraphAnalyzer():
         self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
 
-    def get_forks_graph(self):
-        """Get forks graph from DB."""
-        graph = nx.DiGraph()
-        for rel in self.db_ctrl.get_rows("forks"):
-            graph.add_node(rel['source'])
-            graph.add_node(rel['destination'])
-            graph.add_edge(rel['source'], rel['destination'])
-        return graph
-
     def get_projects_labels(self, nodes):
         if isinstance(nodes, nx.classes.Graph):
             nodes = nodes.nodes
@@ -123,20 +114,36 @@ class GraphAnalyzer():
 
     def analyze_bipartite_graph(self):
         """Analyze bipartite graph of users-projects relations."""
+        def user_to_id(user):
+            return 'u%s' % user if user else user
+
+        def project_to_id(project):
+            return 'p%s' % project if project else project
+
+        def id_to_user(node_id):
+            return node_id[1:] if node_id else node_id
+
+        def id_to_project(node_id):
+            return node_id[1:] if node_id else node_id
+
         print("## Bipartite Graph of Users-Projects Relations", end="\n\n", flush=True)
+        graph = nx.Graph([
+            ((rel['user']), project_to_id(rel['project']))
+            for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])
+        ])
+        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         print("### Maximum Bicliques", end="\n\n", flush=True)
         print("```", flush=True)
         biclique_analyzer = MaximalBicliques(
-            input_addr=os.path.join('res', 'bipartite.txt'),
-            output_addr=os.path.join('res', 'bipartite.bicliques.txt'),
-            output_size_addr=os.path.join('res', 'bipartite.bicliques_size.txt'),
+            input_addr=os.path.join('res', '%s_bipartite.txt' % self.output_files['bipartite']),
+            output_addr=os.path.join('res', '%s.bicliques.txt' % self.output_files['bipartite']),
+            output_size_addr=os.path.join('res', '%s.bicliques_size.txt' % self.output_files['bipartite']),
             store_temps=True
         )
-        biclique_analyzer.calculate_bicliques(
-            [[rel['user'], rel['project']]
-             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])]
-        )
+        biclique_analyzer.calculate_bicliques([list(edge) for edge in graph.edges])
         biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]), reverse=True)
         print("```", flush=True)
+
+        self.save_graph(graph, self.output_files['bipartite'])
         print("", flush=True)

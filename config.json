@@ -1,5 +1,6 @@
 {
     "output":{
+        "bipartite": "bipartite",
         "fork_chains": "fork_chains"
     },
     "db": {
