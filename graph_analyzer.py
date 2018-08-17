@@ -3,6 +3,7 @@ import os.path
 from sys import stderr
 from urllib.parse import quote_plus
 from random import randrange
+from itertools import chain
 
 import networkx as nx
 from matplotlib import use as matplotlib_select_backedn
@@ -103,11 +104,23 @@ class GraphAnalyzer():
         print("", flush=True)
 
     def get_projects_labels(self, nodes):
+        """Get a dict of projects labels."""
         if isinstance(nodes, nx.classes.Graph):
             nodes = nodes.nodes
         return {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
             "projects",
             ["id", "owner_path", "path"],
+            "id in (%s)" % ", ".join("%s" for i in range(len(nodes))),
+            nodes
+        )}
+
+    def get_users_labels(self, nodes):
+        """Get a dict of users labels."""
+        if isinstance(nodes, nx.classes.Graph):
+            nodes = nodes.nodes
+        return {row['id']: row['username'] for row in self.db_ctrl.get_rows_by_query(
+            "users",
+            ["id", "username"],
             "id in (%s)" % ", ".join("%s" for i in range(len(nodes))),
             nodes
         )}
@@ -128,7 +141,7 @@ class GraphAnalyzer():
 
         print("## Bipartite Graph of Users-Projects Relations", end="\n\n", flush=True)
         graph = nx.Graph([
-            ((rel['user']), project_to_id(rel['project']))
+            (user_to_id(rel['user']), project_to_id(rel['project']))
             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])
         ])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
@@ -144,6 +157,27 @@ class GraphAnalyzer():
         biclique_analyzer.calculate_bicliques([list(edge) for edge in graph.edges])
         biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]), reverse=True)
         print("```", flush=True)
+        print("", flush=True)
+
+        for i in range(min(len(biclique_analyzer.bicliques), 10)):
+            biclique_nodes = biclique_analyzer.bicliques[i]
+            print("%d. %dx%d" % (i + 1, len(biclique_nodes[0]), len(biclique_nodes[1])))
+            biclique = graph.subgraph(chain(*biclique_nodes))
+            self.plot_graph(
+                biclique,
+                "%s_%d" % (self.output_files['bipartite'], i),
+                {
+                    **{user_to_id(user): label for (user, label) in self.get_users_labels(
+                        [id_to_user(node) for node in biclique_nodes[0]]
+                    ).items()},
+                    **{project_to_id(project): label for (project, label) in self.get_projects_labels(
+                        [id_to_project(node) for node in biclique_nodes[1]]
+                    ).items()}
+                },
+                (20, 20),
+                pos=nx.drawing.layout.bipartite_layout(biclique, biclique_nodes[0]),
+                node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
+            )
 
         self.save_graph(graph, self.output_files['bipartite'])
         print("", flush=True)
