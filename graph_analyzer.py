@@ -32,7 +32,7 @@ class GraphAnalyzer():
         ax = plt.subplot(1, 1, 1)
         ax.axis("off")
         nx.draw_networkx(graph, with_labels=True, labels=labels, node_size=9000, font_color='w')
-        plt.savefig(os.path.join(os.path.dirname(__file__), "res/%s.svg" % path))
+        plt.savefig(os.path.join(os.path.dirname(__file__), "res', '%s.svg" % path))
 
     def save_graph(self, graph, path):
         nx.write_graphml(graph, os.path.join(os.path.dirname(__file__), "res/%s" % path))
@@ -78,9 +78,9 @@ class GraphAnalyzer():
 
         print("### Maximum Bicliques", flush=True)
         biclique_analyzer = MaximalBicliques(
-            input_addr='res/bipartite.txt',
-            output_addr='res/bipartite.bicliques.txt',
-            output_size_addr='res/bipartite.bicliques_size.txt',
+            input_addr=os.path.join('res', 'bipartite.txt'),
+            output_addr=os.path.join('res', 'bipartite.bicliques.txt'),
+            output_size_addr=os.path.join('res', 'bipartite.bicliques_size.txt'),
             store_temps=True
         )
         biclique_analyzer.calculate_bicliques(
