@@ -55,6 +55,7 @@ class GraphAnalyzer():
         """Analyze chains of forks."""
         print("## Fork Chains", end="\n\n", flush=True)
         graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
+        self.save_graph(graph, self.output_files['fork_chains'])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
@@ -102,7 +103,6 @@ class GraphAnalyzer():
             )
         print("", flush=True)
 
-        self.save_graph(graph, self.output_files['fork_chains'])
         print("", flush=True)
 
     def get_projects_labels(self, nodes):
@@ -146,6 +146,7 @@ class GraphAnalyzer():
             (user_to_id(rel['user']), project_to_id(rel['project']))
             for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])
         ])
+        self.save_graph(graph, self.output_files['bipartite'])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         print("### Maximum Bicliques", end="\n\n", flush=True)
@@ -189,5 +190,4 @@ class GraphAnalyzer():
                 node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
             )
 
-        self.save_graph(graph, self.output_files['bipartite'])
         print("", flush=True)
