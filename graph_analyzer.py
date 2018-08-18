@@ -45,7 +45,7 @@ class GraphAnalyzer():
 
     def save_graph(self, graph, path):
         """Save a grpah in graphml format."""
-        nx.write_graphml(graph, os.path.join(os.path.dirname(__file__), "res/%s" % path))
+        nx.write_graphml(graph, os.path.join(os.path.dirname(__file__), "res", "%s.graphml" % path))
 
     def get_digraph_root(self, digraph):
         """Get root of a digraph."""
