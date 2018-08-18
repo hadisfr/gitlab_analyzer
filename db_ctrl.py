@@ -90,7 +90,7 @@ class DBCtrl(object):
             cursor.close()
             return res
 
-    def get_rows_by_query(self, table, columns=[], query="", values={}, rerais=False):
+    def get_rows_by_query(self, table, columns=[], query="", values=[], rerais=False):
         """Get list of rows from a table of database by query and a list of values."""
         res = tuple()
         cursor = self._get_cursor()

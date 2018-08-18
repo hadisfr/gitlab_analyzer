@@ -148,9 +148,20 @@ class GraphAnalyzer():
             return node_id[1:] if node_id else node_id
 
         print("## Bipartite Graph of Users-Projects Relations", end="\n\n", flush=True)
+        forbidden_projects = [row['id'] for row in self.db_ctrl.get_rows_by_query(
+            "projects",
+            columns=["id"],
+            query="owner_path like %s",
+            values=["gitlab-%%"]
+        )]
         graph = nx.Graph([
             (user_to_id(rel['user']), project_to_id(rel['project']))
-            for rel in self.db_ctrl.get_rows('membership', columns=['user', 'project'])
+            for rel in self.db_ctrl.get_rows_by_query(
+                "membership",
+                columns=['user', 'project'],
+                query="project not in (%s)" % ", ".join(["%s"] * len(forbidden_projects)),
+                values=forbidden_projects
+            )
         ])
         self.save_graph(graph, self.output_files['bipartite'])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
