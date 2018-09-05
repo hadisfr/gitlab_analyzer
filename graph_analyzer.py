@@ -148,7 +148,7 @@ class GraphAnalyzer():
             query="owner_path like %s",
             values=["gitlab-%%"]
         )]
-        graph = nx.Graph([
+        edges = [
             (user_to_id(rel['user']), project_to_id(rel['project']))
             for rel in self.db_ctrl.get_rows_by_query(
                 "membership",
@@ -156,18 +156,20 @@ class GraphAnalyzer():
                 query="project not in (%s)" % ", ".join(["%s"] * len(forbidden_projects)),
                 values=forbidden_projects,
             )
-        ])
-        users = {id_to_user(edge[0]) for edge in graph.edges}
-        projects = {id_to_project(edge[1]) for edge in graph.edges}
+        ]
+        graph = nx.Graph(edges)
+        users = {edge[0] for edge in edges}
+        projects = {edge[1] for edge in edges}
+        nx.set_node_attributes(graph, {**{user: 'user' for user in users},
+                               **{project: 'project' for project in projects}}, 'type')
         nx.set_node_attributes(graph, {**{
-            user_to_id(user): 'user' for user in users
+            user_to_id(user): label for (user, label) in self.get_users_labels([
+                id_to_user(user) for user in users
+            ]).items()
         }, **{
-            project_to_id(project): 'project' for project in projects
-        }}, 'type')
-        nx.set_node_attributes(graph, {**{
-            user_to_id(user): label for (user, label) in self.get_users_labels(list(users)).items()
-        }, **{
-            project_to_id(project): label for (project, label) in self.get_projects_labels(list(projects)).items()
+            project_to_id(project): label for (project, label) in self.get_projects_labels([
+                id_to_project(project) for project in projects
+            ]).items()
         }}, 'label')
         self.save_graph(graph, self.output_files['bipartite'])
         print("n = %d (u = %d, p = %d), m = %d" % (len(graph.nodes), len(users), len(projects), len(graph.edges)),
