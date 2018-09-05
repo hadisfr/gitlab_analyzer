@@ -87,7 +87,11 @@ class GraphAnalyzer():
         components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
 
         print("### Centrality", end="\n\n", flush=True)
-        for centrality, reverse in [('out_degree_centrality', False), ('eigenvector_centrality', True)]:
+        for centrality, reverse in [
+            ('out_degree_centrality', False),
+            ('eigenvector_centrality_numpy', True),
+            ('katz_centrality_numpy', True)
+        ]:
             _analyze_centrality(graph, components_by_longest_path, centrality, reverse)
             print("", flush=True)
 
