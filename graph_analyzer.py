@@ -78,11 +78,7 @@ class GraphAnalyzer():
                 if component[0] < components_by_longest_path[0][0]:
                     break
                 root = self.get_digraph_root(component[1])
-                print("* %s" % graph.node[root]['label'], flush=True)
-                self.save_graph(
-                    component[1],
-                    "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[root]['label']))
-                )
+                print("* %s (%s)" % (graph.node[root]['label'], root), flush=True)
             print("", flush=True)
 
         print("## Fork Chains", end="\n\n", flush=True)
