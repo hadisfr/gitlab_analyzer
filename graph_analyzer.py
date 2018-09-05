@@ -127,7 +127,7 @@ class GraphAnalyzer():
             nodes
         )}
 
-    def analyze_bipartite_graph(self):
+    def analyze_bipartite_graph(self, rel_type="contributions"):
         """Analyze bipartite graph of users-projects relations."""
         def user_to_id(user):
             return 'u%s' % user if user else user
@@ -151,7 +151,7 @@ class GraphAnalyzer():
         edges = [
             (user_to_id(rel['user']), project_to_id(rel['project']))
             for rel in self.db_ctrl.get_rows_by_query(
-                "membership",
+                rel_type,
                 columns=['user', 'project'],
                 query="project not in (%s)" % ", ".join(["%s"] * len(forbidden_projects)),
                 values=forbidden_projects,
