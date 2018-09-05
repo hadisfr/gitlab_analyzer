@@ -55,9 +55,7 @@ class GraphAnalyzer():
         """Analyze chains of forks."""
         def _analyze_centrality(graph, centrality, reverse=False):
             print("#### %s" % centrality, end="\n\n", flush=True)
-            if reverse:
-                graph = graph.reverse()
-            centralities = nx.__getattribute__(centrality)(graph)
+            centralities = nx.__getattribute__(centrality)(graph.reverse() if reverse else graph)
             nx.set_node_attributes(graph, centralities, centrality)
             nodes_by_centrality = sorted(centralities.items(), key=lambda pair: pair[1], reverse=True)
             for i in range(len(nodes_by_centrality)):
@@ -68,6 +66,7 @@ class GraphAnalyzer():
                     node[1],
                     graph.node[node[0]]['root']
                 ), flush=True)
+            print("", flush=True)
 
         def _analyze_longest_chain(graph, components):
             components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in components]
@@ -99,6 +98,7 @@ class GraphAnalyzer():
             ), flush=True)
             for node in component.nodes:
                 graph.node[node]['root'] = root
+        print("", flush=True)
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
@@ -107,7 +107,6 @@ class GraphAnalyzer():
             ('katz_centrality', True)
         ]:
             _analyze_centrality(graph, centrality, reverse)
-            print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
 
