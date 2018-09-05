@@ -157,17 +157,21 @@ class GraphAnalyzer():
                 values=forbidden_projects,
             )
         ])
-        user_labels = {user_to_id(user): label for (user, label) in self.get_users_labels(
-            list({id_to_user(edge[0]) for edge in graph.edges})
-        ).items()}
-        users = set(user_labels.keys())
-        project_labels = {project_to_id(project): label for (project, label) in self.get_projects_labels(
-            list({id_to_project(edge[1]) for edge in graph.edges})
-        ).items()}
-        projects = set(project_labels.keys())
-        nx.set_node_attributes(graph, {**user_labels, **project_labels}, 'label')
+        users = {id_to_user(edge[0]) for edge in graph.edges}
+        projects = {id_to_project(edge[1]) for edge in graph.edges}
+        nx.set_node_attributes(graph, {**{
+            user_to_id(user): 'user' for user in users
+        }, **{
+            project_to_id(project): 'project' for project in projects
+        }}, 'type')
+        nx.set_node_attributes(graph, {**{
+            user_to_id(user): label for (user, label) in self.get_users_labels(list(users)).items()
+        }, **{
+            project_to_id(project): label for (project, label) in self.get_projects_labels(list(projects)).items()
+        }}, 'label')
         self.save_graph(graph, self.output_files['bipartite'])
-        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
+        print("n = %d (u = %d, p = %d), m = %d" % (len(graph.nodes), len(users), len(projects), len(graph.edges)),
+              end="\n\n", flush=True)
 
         print("### Maximum Bicliques", end="\n\n", flush=True)
         print("```", flush=True)
