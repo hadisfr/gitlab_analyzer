@@ -65,11 +65,9 @@ class GraphAnalyzer():
             for node in nodes_by_centrality[:10]:
                 for component in (component[1] for component in components_by_longest_path):
                     if node[0] in component.nodes:
-                        self.plot_graph(
+                        self.save_graph(
                             component,
                             "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[node[0]]['label'])),
-                            (100, 100),
-                            node_color=['g' if n != node[0] else 'k' for n in component.nodes]
                         )
 
         print("## Fork Chains", end="\n\n", flush=True)
@@ -99,11 +97,9 @@ class GraphAnalyzer():
                 break
             root = self.get_digraph_root(component[1])
             print("* %s" % graph.node[root]['label'], flush=True)
-            self.plot_graph(
+            self.save_graph(
                 component[1],
-                "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[root]['label'])),
-                (20, 20),
-                node_color=['b' if node != root else 'k' for node in component[1].nodes]
+                "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[root]['label']))
             )
         print("", flush=True)
 
@@ -199,12 +195,6 @@ class GraphAnalyzer():
             print("    * Projects", flush=True)
             for project in projects.intersection(biclique.nodes):
                 print("        * %s" % graph.nodes[project]['label'])
-            self.plot_graph(
-                biclique,
-                "%s_%d" % (self.output_files['bipartite'], i),
-                (30, 100),
-                pos=nx.drawing.layout.bipartite_layout(biclique, biclique_nodes[0]),
-                node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
-            )
+            self.save_graph(biclique, "%s_%d" % (self.output_files['bipartite'], i),)
 
         print("", flush=True)
