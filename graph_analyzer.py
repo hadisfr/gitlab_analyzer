@@ -53,7 +53,7 @@ class GraphAnalyzer():
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
-        def _analyze_centrality(graph, components_by_longest_path, centrality, reverse=False):
+        def _analyze_centrality(graph, components, centrality, reverse=False):
             print("#### %s" % centrality, end="\n\n", flush=True)
             if reverse:
                 graph = graph.reverse()
@@ -64,7 +64,7 @@ class GraphAnalyzer():
                 node = nodes_by_centrality[i]
                 print("%d. %s (%f)" % (i + 1, graph.node[node[0]]['label'], node[1]), flush=True)
             for node in nodes_by_centrality[:10]:
-                for component in (component[1] for component in components_by_longest_path):
+                for component in (component for component in components):
                     if node[0] in component.nodes:
                         self.save_graph(
                             component,
@@ -76,10 +76,11 @@ class GraphAnalyzer():
         nx.set_node_attributes(graph, self.get_projects_labels(graph), 'label')
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
-        components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in [
-            graph.subgraph(c) for c in nx.weakly_connected_components(graph)
-        ]]
-        components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
+        components = [graph.subgraph(c) for c in nx.weakly_connected_components(graph)]
+        for component in components:
+            root = self.get_digraph_root(component)
+            for node in component.nodes:
+                graph.node[node]['root'] = root
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
@@ -87,11 +88,13 @@ class GraphAnalyzer():
             ('eigenvector_centrality_numpy', True),
             ('katz_centrality_numpy', True)
         ]:
-            _analyze_centrality(graph, components_by_longest_path, centrality, reverse)
+            _analyze_centrality(graph, components, centrality, reverse)
             print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
 
+        components_by_longest_path = [(nx.dag_longest_path_length(component), component) for component in components]
+        components_by_longest_path.sort(key=lambda elm: elm[0], reverse=True)
         print("### Longest chain\n\nlength: %d" % components_by_longest_path[0][0] if len(components_by_longest_path) else 0,
               end="\n\n", flush=True)
         for component in components_by_longest_path:
