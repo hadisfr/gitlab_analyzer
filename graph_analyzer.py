@@ -155,10 +155,8 @@ class GraphAnalyzer():
             forbidden_projects = [row['id'] for row in self.db_ctrl.get_rows_by_query(
                 "projects",
                 columns=["id"],
-                query="stars < %s",
-                # query="owner_path like %s",
-                values=[1000]
-                # values=["gitlab-%%"]
+                query="owner_path like %s",
+                values=["gitlab-%%"]
             )]
             edges = [
                 (_user_to_id(rel['user']), _project_to_id(rel['project']))
