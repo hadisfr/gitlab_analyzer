@@ -91,8 +91,16 @@ class GraphAnalyzer():
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
         components = [graph.subgraph(c) for c in nx.weakly_connected_components(graph)]
-        for component in components:
+        components.sort(key=lambda component: len(component), reverse=True)
+        print("### Component Size", end="\n\n", flush=True)
+        for i in range(len(components)):
+            component = components[i]
             root = self.get_digraph_root(component)
+            print("%d. %s (%d)" % (
+                i + 1,
+                graph.node[root]['label'],
+                len(component)
+            ), flush=True)
             for node in component.nodes:
                 graph.node[node]['root'] = root
 
