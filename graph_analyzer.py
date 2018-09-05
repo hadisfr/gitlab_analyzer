@@ -53,7 +53,7 @@ class GraphAnalyzer():
 
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
-        def _analyze_centrality(graph, components, centrality, reverse=False):
+        def _analyze_centrality(graph, centrality, reverse=False):
             print("#### %s" % centrality, end="\n\n", flush=True)
             if reverse:
                 graph = graph.reverse()
@@ -62,14 +62,11 @@ class GraphAnalyzer():
             nodes_by_centrality = sorted(centralities.items(), key=lambda pair: pair[1], reverse=True)
             for i in range(len(nodes_by_centrality)):
                 node = nodes_by_centrality[i]
-                print("%d. %s (%f)" % (i + 1, graph.node[node[0]]['label'], node[1]), flush=True)
-            for node in nodes_by_centrality[:10]:
-                for component in (component for component in components):
-                    if node[0] in component.nodes:
-                        self.save_graph(
-                            component,
-                            "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[node[0]]['label'])),
-                        )
+                print("%d. %s (%f) with root %s" % (
+                    i + 1, graph.node[node[0]]['label'],
+                    node[1],
+                    graph.node[node[0]]['root']
+                ), flush=True)
 
         print("## Fork Chains", end="\n\n", flush=True)
         graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
@@ -88,7 +85,7 @@ class GraphAnalyzer():
             ('eigenvector_centrality_numpy', True),
             ('katz_centrality_numpy', True)
         ]:
-            _analyze_centrality(graph, components, centrality, reverse)
+            _analyze_centrality(graph, centrality, reverse)
             print("", flush=True)
 
         self.save_graph(graph, self.output_files['fork_chains'])
