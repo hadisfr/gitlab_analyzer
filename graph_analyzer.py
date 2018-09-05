@@ -103,8 +103,8 @@ class GraphAnalyzer():
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
             ('out_degree_centrality', False),
-            ('eigenvector_centrality_numpy', True),
-            ('katz_centrality_numpy', True)
+            ('eigenvector_centrality', True),
+            ('katz_centrality', True)
         ]:
             _analyze_centrality(graph, centrality, reverse)
             print("", flush=True)
