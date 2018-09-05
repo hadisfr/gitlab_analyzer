@@ -152,19 +152,11 @@ class GraphAnalyzer():
             return node_id[1:] if node_id else node_id
 
         def _create_graph():
-            forbidden_projects = [row['id'] for row in self.db_ctrl.get_rows_by_query(
-                "projects",
-                columns=["id"],
-                query="owner_path like %s",
-                values=["gitlab-%%"]
-            )]
             edges = [
                 (_user_to_id(rel['user']), _project_to_id(rel['project']))
                 for rel in self.db_ctrl.get_rows_by_query(
                     rel_type,
-                    columns=['user', 'project'],
-                    query="project not in (%s)" % ", ".join(["%s"] * len(forbidden_projects)),
-                    values=forbidden_projects,
+                    columns=['user', 'project']
                 )
             ]
             graph = nx.Graph(edges)
