@@ -29,7 +29,7 @@ class GraphAnalyzer():
 
         self.db_ctrl = DBCtrl()
 
-    def plot_graph(self, graph, path, labels, figsize, pos=None, node_color=None):
+    def plot_graph(self, graph, path, figsize, pos=None, node_color=None, label_key='label'):
         """Plot a graph to a file."""
         plt.figure(figsize=figsize)
         ax = plt.subplot(1, 1, 1)
@@ -39,8 +39,8 @@ class GraphAnalyzer():
             node_color = [color_pool[randrange(0, len(color_pool))] for node in graph.nodes]
         if not pos:
             pos = nx.drawing.nx_agraph.graphviz_layout(graph)
-        nx.draw_networkx(graph, pos=pos, with_labels=True, labels=labels, node_size=9000, arrowsize=30,
-                         font_color='w', node_color=node_color)
+        nx.draw_networkx(graph, pos=pos, with_labels=True, labels=nx.get_node_attributes(graph, label_key),
+                         node_size=9000, arrowsize=30, font_color='w', node_color=node_color)
         plt.savefig(os.path.join(os.path.dirname(__file__), "res", "%s.svg" % path))
 
     def save_graph(self, graph, path):
@@ -59,25 +59,22 @@ class GraphAnalyzer():
                 graph = graph.reverse()
             nodes_by_centrality = sorted(nx.__getattribute__(centrality)(graph).items(),
                                          key=lambda pair: pair[1], reverse=True)
-            labels = self.get_projects_labels([node[0] for node in nodes_by_centrality])
             for i in range(len(nodes_by_centrality)):
                 node = nodes_by_centrality[i]
-                print("%d. %s (%f)" % (i + 1, labels[node[0]].replace('\n', '/'), node[1]), flush=True)
+                print("%d. %s (%f)" % (i + 1, graph.node[node[0]]['label'], node[1]), flush=True)
             for node in nodes_by_centrality[:10]:
                 for component in (component[1] for component in components_by_longest_path):
                     if node[0] in component.nodes:
-                        component_labels = self.get_projects_labels(component)
-                        node_label = component_labels[node[0]].replace('\n', '/')
                         self.plot_graph(
                             component,
-                            "%s_%s" % (self.output_files['fork_chains'], quote_plus(node_label)),
-                            component_labels,
+                            "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[node[0]]['label'])),
                             (100, 100),
                             node_color=['g' if n != node[0] else 'k' for n in component.nodes]
                         )
 
         print("## Fork Chains", end="\n\n", flush=True)
         graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
+        nx.set_node_attributes(graph, self.get_projects_labels(graph), 'label')
         self.save_graph(graph, self.output_files['fork_chains'])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
@@ -100,14 +97,11 @@ class GraphAnalyzer():
         for component in components_by_longest_path:
             if component[0] < components_by_longest_path[0][0]:
                 break
-            labels = self.get_projects_labels(component[1])
             root = self.get_digraph_root(component[1])
-            root_label = labels[root].replace('\n', '/')
-            print("* %s" % root_label, flush=True)
+            print("* %s" % graph.node[root]['label'], flush=True)
             self.plot_graph(
                 component[1],
-                "%s_%s" % (self.output_files['fork_chains'], quote_plus(root_label)),
-                labels,
+                "%s_%s" % (self.output_files['fork_chains'], quote_plus(graph.node[root]['label'])),
                 (20, 20),
                 node_color=['b' if node != root else 'k' for node in component[1].nodes]
             )
@@ -115,11 +109,11 @@ class GraphAnalyzer():
 
         print("", flush=True)
 
-    def get_projects_labels(self, nodes):
+    def get_projects_labels(self, nodes, sep='/'):
         """Get a dict of projects labels."""
         if isinstance(nodes, nx.classes.Graph):
             nodes = nodes.nodes
-        return {row['id']: "%s\n%s" % (row['owner_path'], row['path']) for row in self.db_ctrl.get_rows_by_query(
+        return {row['id']: sep.join([row['owner_path'], row['path']]) for row in self.db_ctrl.get_rows_by_query(
             "projects",
             ["id", "owner_path", "path"],
             "id in (%s)" % ", ".join("%s" for i in range(len(nodes))),
@@ -164,9 +158,18 @@ class GraphAnalyzer():
                 "membership",
                 columns=['user', 'project'],
                 query="project not in (%s)" % ", ".join(["%s"] * len(forbidden_projects)),
-                values=forbidden_projects
+                values=forbidden_projects,
             )
         ])
+        user_labels = {user_to_id(user): label for (user, label) in self.get_users_labels(
+            list({id_to_user(edge[0]) for edge in graph.edges})
+        ).items()}
+        users = set(user_labels.keys())
+        project_labels = {project_to_id(project): label for (project, label) in self.get_projects_labels(
+            list({id_to_project(edge[1]) for edge in graph.edges})
+        ).items()}
+        projects = set(project_labels.keys())
+        nx.set_node_attributes(graph, {**user_labels, **project_labels}, 'label')
         self.save_graph(graph, self.output_files['bipartite'])
         print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
 
@@ -191,21 +194,14 @@ class GraphAnalyzer():
             print("%d. %dx%d" % (i + 1, len(biclique_nodes[0]), len(biclique_nodes[1])))
             biclique = graph.subgraph(chain(*biclique_nodes))
             print("    * Users", flush=True)
-            user_labels = {user_to_id(user): label for (user, label) in self.get_users_labels(
-                [id_to_user(node) for node in biclique_nodes[0]]
-            ).items()}
-            for user in user_labels:
-                print("        * %s" % user_labels[user])
+            for user in users.intersection(biclique.nodes):
+                print("        * %s" % graph.nodes[user]['label'])
             print("    * Projects", flush=True)
-            project_labels = {project_to_id(project): label for (project, label) in self.get_projects_labels(
-                [id_to_project(node) for node in biclique_nodes[1]]
-            ).items()}
-            for project in project_labels:
-                print("        * %s" % project_labels[project].replace('\n', '/'))
+            for project in projects.intersection(biclique.nodes):
+                print("        * %s" % graph.nodes[project]['label'])
             self.plot_graph(
                 biclique,
                 "%s_%d" % (self.output_files['bipartite'], i),
-                {**user_labels, **project_labels},
                 (30, 100),
                 pos=nx.drawing.layout.bipartite_layout(biclique, biclique_nodes[0]),
                 node_color=['r' if n in biclique_nodes[0] else 'b' for n in biclique.nodes]
