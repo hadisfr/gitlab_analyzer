@@ -108,9 +108,10 @@ class GraphAnalyzer():
         print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
         print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
         print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
-        fit_fig = fit.plot_pdf(linewidth=3)
-        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--')
-        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--')
+        fit_fig = fit.plot_pdf(linewidth=3, label='Empirical Data')
+        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--', label='Lognormal')
+        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
+        fit_fig.legend()
         plt.savefig(os.path.join(os.path.dirname(__file__), "res",
                                  quote_plus("%s_distro.png" % self.output_files['fork_chains'])))
         print("", flush=True)
