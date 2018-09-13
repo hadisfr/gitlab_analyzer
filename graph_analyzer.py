@@ -14,6 +14,8 @@ from pybiclique import MaximalBicliques
 
 from db_ctrl import DBCtrl
 
+plt.rcParams['svg.fonttype'] = 'none'
+
 
 class GraphAnalyzer():
     """Analyze GitLab network graph"""
@@ -113,7 +115,7 @@ class GraphAnalyzer():
         fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
         fit_fig.legend()
         plt.savefig(os.path.join(os.path.dirname(__file__), "res",
-                                 quote_plus("%s_distro.png" % self.output_files['fork_chains'])))
+                                 quote_plus("%s_distro.svg" % self.output_files['fork_chains'])))
         print("", flush=True)
 
         print("### Centrality", end="\n\n", flush=True)
