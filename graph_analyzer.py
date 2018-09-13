@@ -189,7 +189,7 @@ class GraphAnalyzer():
                 store_temps=True
             )
             biclique_analyzer.calculate_bicliques([list(edge) for edge in edges])
-            biclique_analyzer.bicliques.sort(key=lambda biclique: len(biclique[0]) * len(biclique[1]), reverse=True)
+            biclique_analyzer.bicliques.sort(key=lambda biclique: sorted((len(biclique[0]), len(biclique[1]))), reverse=True)
             print("```", flush=True)
             print("", flush=True)
             return biclique_analyzer
