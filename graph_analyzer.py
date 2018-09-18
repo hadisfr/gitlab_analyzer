@@ -5,11 +5,14 @@ from urllib.parse import quote_plus
 from random import randrange
 from itertools import chain
 
+import numpy as np
+import pandas as pd
 import networkx as nx
 import powerlaw
-from matplotlib import use as matplotlib_select_backedn
-matplotlib_select_backedn('Agg')  # noqa
+from matplotlib import use as matplotlib_select_backend
+matplotlib_select_backend('Agg')  # noqa
 from matplotlib import pyplot as plt
+import seaborn as sns
 from pybiclique import MaximalBicliques
 
 from db_ctrl import DBCtrl
@@ -69,6 +72,7 @@ class GraphAnalyzer():
         print("", flush=True)
 
     def get_fork_chains(self, is_verbose=False):
+        """Get forest of forks."""
         if is_verbose:
             print("## Fork Chains", end="\n\n", flush=True)
         graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
@@ -78,13 +82,13 @@ class GraphAnalyzer():
 
         components = [graph.subgraph(c) for c in nx.weakly_connected_components(graph)]
         components.sort(key=lambda component: len(component), reverse=True)
-        trees_sizes = []
+        trees_sizes = {}
         if is_verbose:
             print("### Components Size", end="\n\n", flush=True)
         for i in range(len(components)):
             component = components[i]
             root = self.get_digraph_root(component)
-            trees_sizes.append(len(component))
+            trees_sizes[root] = (len(component))
             if is_verbose:
                 print("%d. %s (%d)" % (
                     i + 1,
@@ -128,7 +132,7 @@ class GraphAnalyzer():
         print("", flush=True)
 
         print("#### Distribution", end="\n\n", flush=True)
-        self.distribution_analyze(trees_sizes)
+        self.distribution_analyze(list(trees_sizes.values()))
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
@@ -243,3 +247,44 @@ class GraphAnalyzer():
             self.save_graph(biclique, "%s_%d" % (self.output_files['bipartite'], i + 1),)
 
         print("", flush=True)
+
+    def draw_correlation_matrix(self, correlation_matrix, name):
+        """Draw correlation matrix."""
+        plt.figure(figsize=(8, 8))
+        mask = np.zeros_like(correlation_matrix, dtype=np.bool)
+        mask[np.triu_indices_from(mask)] = True
+        heatmap = sns.heatmap(correlation_matrix, square=True, mask=mask)
+        heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation=-90)
+        heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation=0)
+        plt.savefig(os.path.join(os.path.dirname(__file__), "res", quote_plus("%s.svg" % name)))
+
+    def analyze_projects_attributes(self):
+        print("## Projects' Attributes", end="\n\n", flush=True)
+        numerical_attributes = ["stars", "forks", "owned_by_user", "commit_count", "storage_size",
+                                "repository_size", "lfs_objects_size", "archived"]
+        # to_binary_attributes = ["ci_config_path", "description", "avatar"]
+        projects = {project['id']: project for project in
+                    self.db_ctrl.get_rows("projects", columns=["id"] + numerical_attributes)}
+        numerical_attributes.append("forks_tree_size")
+        for (project, forks) in self.get_fork_chains()[2].items():
+            try:
+                projects[project]["forks_tree_size"] = forks
+            except KeyError:
+                pass
+        projects = pd.DataFrame(list(projects.values())).drop('id', axis='columns').fillna(0)
+
+        pearson_correlation = projects.corr(method="pearson")
+        print("### Pearson Correlation", end="\n\n", flush=True)
+        print("```", flush=True)
+        print(pearson_correlation.to_string())
+        print("```", flush=True)
+        self.draw_correlation_matrix(pearson_correlation, "%s_pearson_correlation"
+                                     % self.output_files['projects_attributes'])
+
+        spearman_correlation = projects.corr(method="spearman")
+        print("### Spearman Correlation", end="\n\n", flush=True)
+        print("```", flush=True)
+        print(spearman_correlation.to_string())
+        print("```", flush=True)
+        self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
+                                     % self.output_files['projects_attributes'])

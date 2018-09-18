@@ -1,6 +1,7 @@
 {
     "output":{
         "bipartite": "bipartite",
+        "projects_attributes": "projects_attr",
         "fork_chains": "fork_chains"
     },
     "db": {
