@@ -54,6 +54,47 @@ class GraphAnalyzer():
         """Get root of a digraph."""
         return [node for node in digraph.nodes if digraph.in_degree(node) == 0][0]
 
+    def distribution_analyze(self, data):
+        """Analyze statistical distribution of data."""
+        fit = powerlaw.Fit(data)
+        print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
+        print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
+        print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
+        fit_fig = fit.plot_pdf(linewidth=3, label='Empirical Data')
+        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--', label='Lognormal')
+        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
+        fit_fig.legend()
+        plt.savefig(os.path.join(os.path.dirname(__file__), "res",
+                                 quote_plus("%s_distro.svg" % self.output_files['fork_chains'])))
+        print("", flush=True)
+
+    def get_fork_chains(self, is_verbose=False):
+        if is_verbose:
+            print("## Fork Chains", end="\n\n", flush=True)
+        graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
+        nx.set_node_attributes(graph, self.get_projects_labels(graph), 'label')
+        if is_verbose:
+            print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
+
+        components = [graph.subgraph(c) for c in nx.weakly_connected_components(graph)]
+        components.sort(key=lambda component: len(component), reverse=True)
+        trees_sizes = []
+        if is_verbose:
+            print("### Components Size", end="\n\n", flush=True)
+        for i in range(len(components)):
+            component = components[i]
+            root = self.get_digraph_root(component)
+            trees_sizes.append(len(component))
+            if is_verbose:
+                print("%d. %s (%d)" % (
+                    i + 1,
+                    graph.node[root]['label'],
+                    len(component)
+                ), flush=True)
+            for node in component.nodes:
+                graph.node[node]['root'] = root
+        return (graph, components, trees_sizes)
+
     def analyze_fork_chains(self):
         """Analyze chains of forks."""
         def _analyze_centrality(graph, centrality, reverse=False):
@@ -83,40 +124,11 @@ class GraphAnalyzer():
                 print("* %s (%s)" % (graph.node[root]['label'], root), flush=True)
             print("", flush=True)
 
-        print("## Fork Chains", end="\n\n", flush=True)
-        graph = nx.DiGraph([(rel['source'], rel['destination']) for rel in self.db_ctrl.get_rows("forks")])
-        nx.set_node_attributes(graph, self.get_projects_labels(graph), 'label')
-        print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)), end="\n\n", flush=True)
-
-        components = [graph.subgraph(c) for c in nx.weakly_connected_components(graph)]
-        components.sort(key=lambda component: len(component), reverse=True)
-        trees_sizes = []
-        print("### Components Size", end="\n\n", flush=True)
-        for i in range(len(components)):
-            component = components[i]
-            root = self.get_digraph_root(component)
-            trees_sizes.append(len(component))
-            print("%d. %s (%d)" % (
-                i + 1,
-                graph.node[root]['label'],
-                len(component)
-            ), flush=True)
-            for node in component.nodes:
-                graph.node[node]['root'] = root
+        (graph, components, trees_sizes) = self.get_fork_chains(is_verbose=True)
         print("", flush=True)
 
         print("#### Distribution", end="\n\n", flush=True)
-        fit = powerlaw.Fit(trees_sizes)
-        print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
-        print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
-        print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
-        fit_fig = fit.plot_pdf(linewidth=3, label='Empirical Data')
-        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--', label='Lognormal')
-        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
-        fit_fig.legend()
-        plt.savefig(os.path.join(os.path.dirname(__file__), "res",
-                                 quote_plus("%s_distro.svg" % self.output_files['fork_chains'])))
-        print("", flush=True)
+        self.distribution_analyze(trees_sizes)
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
