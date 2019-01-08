@@ -261,8 +261,8 @@ class GraphAnalyzer():
     def analyze_projects_attributes(self):
         print("## Projects' Attributes", end="\n\n", flush=True)
         numerical_attributes = ["stars", "forks", "commit_count", "storage_size",
-                                "repository_size", "lfs_objects_size", "archived"]
-        binary_attributes = ["ci_config_path", "description", "avatar", "owned_by_user"]
+                                "repository_size", "lfs_objects_size"]
+        binary_attributes = ["ci_config_path", "description", "avatar", "owned_by_user", "archived"]
         projects = {project['id']: project for project in
                     self.db_ctrl.get_rows("projects", columns=["id"] + numerical_attributes + binary_attributes)}
         numerical_attributes.append("forks_tree_size")
