@@ -253,7 +253,7 @@ class GraphAnalyzer():
         plt.figure(figsize=(8, 8))
         mask = np.zeros_like(correlation_matrix, dtype=np.bool)
         mask[np.triu_indices_from(mask)] = True
-        heatmap = sns.heatmap(correlation_matrix, square=True, mask=mask)
+        heatmap = sns.heatmap(correlation_matrix, square=True, mask=mask, center=0.5, cmap="Spectral")
         heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation=-90)
         heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation=0)
         plt.savefig(os.path.join(os.path.dirname(__file__), "res", quote_plus("%s.svg" % name)))
