@@ -57,8 +57,9 @@ class GraphAnalyzer():
         """Get root of a digraph."""
         return [node for node in digraph.nodes if digraph.in_degree(node) == 0][0]
 
-    def distribution_analyze(self, data):
+    def distribution_analyze(self, data, attribute_name):
         """Analyze statistical distribution of data."""
+        plt.clf()
         fit = powerlaw.Fit(data)
         print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
         print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
@@ -68,7 +69,7 @@ class GraphAnalyzer():
         fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
         fit_fig.legend()
         plt.savefig(os.path.join(os.path.dirname(__file__), "res",
-                                 quote_plus("%s_distro.svg" % self.output_files['fork_chains'])))
+                                 quote_plus("%s_distro.svg" % attribute_name)))
         print("", flush=True)
 
     def get_fork_chains(self, is_verbose=False):
@@ -132,7 +133,7 @@ class GraphAnalyzer():
         print("", flush=True)
 
         print("#### Distribution", end="\n\n", flush=True)
-        self.distribution_analyze(list(trees_sizes.values()))
+        self.distribution_analyze(list(trees_sizes.values()), self.output_files['fork_chains'])
 
         print("### Centrality", end="\n\n", flush=True)
         for centrality, reverse in [
@@ -291,3 +292,9 @@ class GraphAnalyzer():
         print("```", flush=True)
         self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
                                      % self.output_files['projects_attributes'])
+
+        print("### Distribution")
+        for attribute in numerical_attributes:
+            print("#### %s" % attribute)
+            self.distribution_analyze(list(projects[attribute]),
+                                      "%s_%s" % (self.output_files['projects_attributes'], attribute))
