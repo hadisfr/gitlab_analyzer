@@ -229,8 +229,58 @@ class GraphAnalyzer():
             print("", flush=True)
             return biclique_analyzer
 
+        def _analyze_centrality(graph, centrality):
+            print("##### %s" % centrality, end="\n\n", flush=True)
+            centralities = nx.__getattribute__(centrality)(graph)
+            nx.set_node_attributes(graph, centralities, centrality)
+            nodes_by_centrality = sorted(centralities.items(), key=lambda pair: pair[1], reverse=True)
+            for i in range(len(nodes_by_centrality)):
+                node = nodes_by_centrality[i]
+                print("%d. %s (%f)" % (
+                    i + 1,
+                    graph.node[node[0]]['label'],
+                    node[1],
+                ), flush=True)
+            print("", flush=True)
+
+        def _analyze_projected_graph(src, dst, name):
+            print("### %s Graph" % name.capitalize(), end="\n\n", flush=True)
+            # graph = nx.algorithms.bipartite.projected_graph(src, dst)
+            graph = nx.algorithms.bipartite.weighted_projected_graph(src, dst)
+            print("n = %d, m = %d" % (len(graph.nodes), len(graph.edges)),
+                  end="\n\n", flush=True)
+            self.save_graph(graph, "%s_%s" % (self.output_files['bipartite'], name),)
+
+            print("#### Degree Distribution", end="\n\n", flush=True)
+            self.distribution_analyze([d for n, d in graph.degree()],
+                                      "%s_%s_degrees" % (self.output_files['bipartite'], name))
+
+            print("#### Components Size Distribution", end="\n\n", flush=True)
+            components = sorted([graph.subgraph(c) for c in nx.connected_components(graph)], key=len, reverse=True)
+            print("%d components, max size = %d" % (len(components), len(components[0])))
+            self.distribution_analyze([len(c) for c in components],
+                                      "%s_%s_components_size" % (self.output_files['bipartite'], name))
+
+            # diameter = max([nx.algorithms.distance_measures.diameter(component) for component in components])
+            # diameter = nx.algorithms.distance_measures.diameter(components[0])  # TODO: remove weights, enhance time
+            # print("diameter = %d" % diameter)
+
+            # rich_club_coef = nx.rich_club_coefficient(graph)  # took a long time
+            # print("Rich Club Coefficient = %d" % rich_club_coef)
+
+            print("#### Centrality", end="\n\n", flush=True)
+            for centrality in [
+                'degree_centrality',
+                'eigenvector_centrality',
+                # 'katz_centrality'  # took a long time
+            ]:
+                _analyze_centrality(graph, centrality)
+
         print("## Bipartite Graph of Users-Projects Relations", end="\n\n", flush=True)
         (graph, users, projects, edges) = _create_graph()
+
+        _analyze_projected_graph(graph, users, "users")
+        _analyze_projected_graph(graph, projects, "projects")
 
         print("### Maximum Bicliques", end="\n\n", flush=True)
         biclique_analyzer = _create_biclique_analyzer(edges)
