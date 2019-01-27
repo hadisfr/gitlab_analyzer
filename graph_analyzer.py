@@ -273,6 +273,8 @@ class GraphAnalyzer():
                 'degree_centrality',
                 'eigenvector_centrality',
                 # 'katz_centrality'  # took a long time
+                # 'closeness_centrality',  # took a long time
+                # 'betweenness_centrality',  # took a long time
             ]:
                 _analyze_centrality(graph, centrality)
 
