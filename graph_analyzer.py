@@ -60,7 +60,11 @@ class GraphAnalyzer():
     def distribution_analyze(self, data, attribute_name):
         """Analyze statistical distribution of data."""
         plt.clf()
-        fit = powerlaw.Fit(data)
+        fit = powerlaw.Fit(
+            data,
+            discrete=True,
+            estimate_discrete=False,
+        )
         print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
         print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
         print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
