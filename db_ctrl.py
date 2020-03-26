@@ -52,6 +52,7 @@ class DBCtrl(object):
                 cursor.execute("SET NAMES %s;" % self.encoding)
                 cursor.execute("SET CHARACTER SET %s;" % self.encoding)
                 cursor.execute("SET character_set_connection=%s;" % self.encoding)
+                cursor.execute("SET range_optimizer_max_mem_size=0;")
             except MySQLdb.Error as ex:
                 print("Cursor Error: %s\n\033[31m%s\033[0m\n" % (ex, format_exc()), file=stderr, flush=True)
         return cursor
