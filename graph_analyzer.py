@@ -60,6 +60,8 @@ class GraphAnalyzer():
     def distribution_analyze(self, data, attribute_name):
         """Analyze statistical distribution of data."""
         print("max: %s, min: %s" % (max(data), min(data)))
+        print(len(data))
+        print(data.count(1))
         print("10 highest: %s" % sorted(data)[-10:])
         plt.clf()
         fit = powerlaw.Fit(
@@ -70,9 +72,9 @@ class GraphAnalyzer():
         print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
         print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
         print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
-        fit_fig = fit.plot_pdf(linewidth=3, marker='o', label='Empirical Data')
-        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--', label='Lognormal')
-        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
+        fit_fig = fit.plot_pdf(linewidth=3, marker='o', color='black', label='Empirical Data')
+        fit.lognormal.plot_pdf(ax=fit_fig, color='silver', linestyle='--', label='Lognormal')
+        fit.power_law.plot_pdf(ax=fit_fig, color='gray', linewidth=2, linestyle=':', label='PowerLaw')
         fit_fig.legend()
         fit_fig.set_xlabel(attribute_name.replace("_", " "))
         fit_fig.set_ylabel("p(x)")
