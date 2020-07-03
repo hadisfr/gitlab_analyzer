@@ -103,11 +103,11 @@ class GraphAnalyzer():
             if is_verbose:
                 print("%d. %s (%d)" % (
                     i + 1,
-                    graph.node[root]['label'],
+                    graph.nodes[root]['label'],
                     len(component)
                 ), flush=True)
             for node in component.nodes:
-                graph.node[node]['root'] = root
+                graph.nodes[node]['root'] = root
         return (graph, components, trees_sizes)
 
     def analyze_fork_chains(self):
@@ -121,9 +121,9 @@ class GraphAnalyzer():
                 node = nodes_by_centrality[i]
                 print("%d. %s (%f) with root %s" % (
                     i + 1,
-                    graph.node[node[0]]['label'],
+                    graph.nodes[node[0]]['label'],
                     node[1],
-                    graph.node[node[0]]['root']
+                    graph.nodes[node[0]]['root']
                 ), flush=True)
             print("", flush=True)
 
@@ -136,7 +136,7 @@ class GraphAnalyzer():
                 if component[0] < components_by_longest_path[0][0]:
                     break
                 root = self.get_digraph_root(component[1])
-                print("* %s (%s)" % (graph.node[root]['label'], root), flush=True)
+                print("* %s (%s)" % (graph.nodes[root]['label'], root), flush=True)
             print("", flush=True)
 
         (graph, components, trees_sizes) = self.get_fork_chains(is_verbose=True)
@@ -248,7 +248,7 @@ class GraphAnalyzer():
                 node = nodes_by_centrality[i]
                 print("%d. %s (%f)" % (
                     i + 1,
-                    graph.node[node[0]]['label'],
+                    graph.nodes[node[0]]['label'],
                     node[1],
                 ), flush=True)
             print("", flush=True)
