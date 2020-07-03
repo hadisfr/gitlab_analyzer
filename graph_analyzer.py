@@ -18,6 +18,7 @@ from pybiclique import MaximalBicliques
 from db_ctrl import DBCtrl
 
 plt.rcParams['svg.fonttype'] = 'none'
+np.seterr(divide='ignore', invalid='ignore')
 
 
 class GraphAnalyzer():
