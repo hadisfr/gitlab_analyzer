@@ -340,24 +340,26 @@ class GraphAnalyzer():
                 row[attribute] = True if row[attribute] and row[attribute] != "" and row[attribute] != 0 else False
         projects = pd.DataFrame(list(projects.values())).drop('id', axis='columns').fillna(0)
 
-        print("### Pearson Correlation", end="\n\n", flush=True)
-        pearson_correlation = projects.corr(method="pearson")
-        print("```", flush=True)
-        print(pearson_correlation.to_string())
-        print("```", flush=True)
-        self.draw_correlation_matrix(pearson_correlation, "%s_pearson_correlation"
-                                     % self.output_files['projects_attributes'])
+        # print("### Pearson Correlation", end="\n\n", flush=True)
+        # pearson_correlation = projects.corr(method="pearson")
+        # print("```", flush=True)
+        # print(pearson_correlation.to_string())
+        # print("```", flush=True)
+        # self.draw_correlation_matrix(pearson_correlation, "%s_pearson_correlation"
+        #                              % self.output_files['projects_attributes'])
 
-        print("### Spearman Correlation", end="\n\n", flush=True)
-        spearman_correlation = projects.corr(method="spearman")
-        print("```", flush=True)
-        print(spearman_correlation.to_string())
-        print("```", flush=True)
-        self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
-                                     % self.output_files['projects_attributes'])
+        # print("### Spearman Correlation", end="\n\n", flush=True)
+        # spearman_correlation = projects.corr(method="spearman")
+        # print("```", flush=True)
+        # print(spearman_correlation.to_string())
+        # print("```", flush=True)
+        # self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
+        #                              % self.output_files['projects_attributes'])
 
         print("### Distribution")
         for attribute in numerical_attributes:
+            # if attribute in ["storage_size", "repository_size", "lfs_objects_size"]:
+            #     no discrete=True and estimate_discrete=False
             print("#### %s" % attribute)
             self.distribution_analyze(list(projects[attribute]),
                                       "%s_%s" % (self.output_files['projects_attributes'], attribute))
