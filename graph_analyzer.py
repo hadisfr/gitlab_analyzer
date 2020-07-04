@@ -4,7 +4,6 @@ from sys import stderr
 from urllib.parse import quote_plus
 from random import randrange
 from itertools import chain
-
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -18,6 +17,7 @@ from pybiclique import MaximalBicliques
 from db_ctrl import DBCtrl
 
 plt.rcParams['svg.fonttype'] = 'none'
+np.seterr(divide='ignore', invalid='ignore')
 
 
 class GraphAnalyzer():
@@ -60,6 +60,8 @@ class GraphAnalyzer():
     def distribution_analyze(self, data, attribute_name):
         """Analyze statistical distribution of data."""
         print("max: %s, min: %s" % (max(data), min(data)))
+        print(len(data))
+        print(data.count(1))
         print("10 highest: %s" % sorted(data)[-10:])
         plt.clf()
         fit = powerlaw.Fit(
@@ -70,9 +72,9 @@ class GraphAnalyzer():
         print("Power Law with alpha = %f and standard error = %f" % (fit.power_law.alpha, fit.power_law.sigma))
         print("Lognormal with mu = %f and sigma = %f" % (fit.lognormal.mu, fit.lognormal.sigma))
         print("Power Law vs Lognormal: %s" % str(fit.distribution_compare('power_law', 'lognormal')))
-        fit_fig = fit.plot_pdf(linewidth=3, marker='o', label='Empirical Data')
-        fit.lognormal.plot_pdf(ax=fit_fig, color='g', linestyle='--', label='Lognormal')
-        fit.power_law.plot_pdf(ax=fit_fig, color='r', linestyle='--', label='PowerLaw')
+        fit_fig = fit.plot_pdf(linewidth=3, marker='o', color='black', label='Empirical Data')
+        fit.lognormal.plot_pdf(ax=fit_fig, color='silver', linestyle='--', label='Lognormal')
+        fit.power_law.plot_pdf(ax=fit_fig, color='gray', linewidth=2, linestyle=':', label='PowerLaw')
         fit_fig.legend()
         fit_fig.set_xlabel(attribute_name.replace("_", " "))
         fit_fig.set_ylabel("p(x)")
@@ -101,11 +103,11 @@ class GraphAnalyzer():
             if is_verbose:
                 print("%d. %s (%d)" % (
                     i + 1,
-                    graph.node[root]['label'],
+                    graph.nodes[root]['label'],
                     len(component)
                 ), flush=True)
             for node in component.nodes:
-                graph.node[node]['root'] = root
+                graph.nodes[node]['root'] = root
         return (graph, components, trees_sizes)
 
     def analyze_fork_chains(self):
@@ -119,9 +121,9 @@ class GraphAnalyzer():
                 node = nodes_by_centrality[i]
                 print("%d. %s (%f) with root %s" % (
                     i + 1,
-                    graph.node[node[0]]['label'],
+                    graph.nodes[node[0]]['label'],
                     node[1],
-                    graph.node[node[0]]['root']
+                    graph.nodes[node[0]]['root']
                 ), flush=True)
             print("", flush=True)
 
@@ -134,7 +136,7 @@ class GraphAnalyzer():
                 if component[0] < components_by_longest_path[0][0]:
                     break
                 root = self.get_digraph_root(component[1])
-                print("* %s (%s)" % (graph.node[root]['label'], root), flush=True)
+                print("* %s (%s)" % (graph.nodes[root]['label'], root), flush=True)
             print("", flush=True)
 
         (graph, components, trees_sizes) = self.get_fork_chains(is_verbose=True)
@@ -246,7 +248,7 @@ class GraphAnalyzer():
                 node = nodes_by_centrality[i]
                 print("%d. %s (%f)" % (
                     i + 1,
-                    graph.node[node[0]]['label'],
+                    graph.nodes[node[0]]['label'],
                     node[1],
                 ), flush=True)
             print("", flush=True)
@@ -337,24 +339,26 @@ class GraphAnalyzer():
                 row[attribute] = True if row[attribute] and row[attribute] != "" and row[attribute] != 0 else False
         projects = pd.DataFrame(list(projects.values())).drop('id', axis='columns').fillna(0)
 
-        print("### Pearson Correlation", end="\n\n", flush=True)
-        pearson_correlation = projects.corr(method="pearson")
-        print("```", flush=True)
-        print(pearson_correlation.to_string())
-        print("```", flush=True)
-        self.draw_correlation_matrix(pearson_correlation, "%s_pearson_correlation"
-                                     % self.output_files['projects_attributes'])
+        # print("### Pearson Correlation", end="\n\n", flush=True)
+        # pearson_correlation = projects.corr(method="pearson")
+        # print("```", flush=True)
+        # print(pearson_correlation.to_string())
+        # print("```", flush=True)
+        # self.draw_correlation_matrix(pearson_correlation, "%s_pearson_correlation"
+        #                              % self.output_files['projects_attributes'])
 
-        print("### Spearman Correlation", end="\n\n", flush=True)
-        spearman_correlation = projects.corr(method="spearman")
-        print("```", flush=True)
-        print(spearman_correlation.to_string())
-        print("```", flush=True)
-        self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
-                                     % self.output_files['projects_attributes'])
+        # print("### Spearman Correlation", end="\n\n", flush=True)
+        # spearman_correlation = projects.corr(method="spearman")
+        # print("```", flush=True)
+        # print(spearman_correlation.to_string())
+        # print("```", flush=True)
+        # self.draw_correlation_matrix(spearman_correlation, "%s_spearman_correlation"
+        #                              % self.output_files['projects_attributes'])
 
         print("### Distribution")
         for attribute in numerical_attributes:
+            # if attribute in ["storage_size", "repository_size", "lfs_objects_size"]:
+            #     no discrete=True and estimate_discrete=False
             print("#### %s" % attribute)
             self.distribution_analyze(list(projects[attribute]),
                                       "%s_%s" % (self.output_files['projects_attributes'], attribute))
