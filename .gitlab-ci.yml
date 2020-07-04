@@ -9,6 +9,8 @@ cache:
     - .env/
 
 before_script:
+  - apt-get update
+  - apt-get -y install graphviz libgraphviz-dev pkg-config
   - python -V               # Print out python version for debugging
   - pip install virtualenv
   - python -m venv .env
