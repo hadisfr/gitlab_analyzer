@@ -4,7 +4,6 @@ from sys import stderr
 from urllib.parse import quote_plus
 from random import randrange
 from itertools import chain
-
 import numpy as np
 import pandas as pd
 import networkx as nx
