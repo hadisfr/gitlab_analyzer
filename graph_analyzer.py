@@ -316,7 +316,7 @@ class GraphAnalyzer():
         plt.figure(figsize=(8, 8))
         mask = np.zeros_like(correlation_matrix, dtype=np.bool)
         mask[np.triu_indices_from(mask)] = True
-        heatmap = sns.heatmap(correlation_matrix, square=True, mask=mask, center=0.5, cmap="Spectral")
+        heatmap = sns.heatmap(correlation_matrix, square=True, mask=mask, center=0.5, cmap="binary")
         heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation=-90)
         heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation=0)
         plt.savefig(os.path.join(os.path.dirname(__file__), "res", quote_plus("%s.svg" % name)))
@@ -325,7 +325,8 @@ class GraphAnalyzer():
         print("## Projects' Attributes", end="\n\n", flush=True)
         numerical_attributes = ["stars", "forks", "commit_count", "storage_size",
                                 "repository_size", "lfs_objects_size"]
-        binary_attributes = ["ci_config_path", "description", "avatar", "owned_by_user", "archived"]
+        # binary_attributes = ["ci_config_path", "description", "avatar", "owned_by_user", "archived"]
+        binary_attributes = []
         projects = {project['id']: project for project in
                     self.db_ctrl.get_rows("projects", columns=["id"] + numerical_attributes + binary_attributes)}
         numerical_attributes.append("forks_tree_size")
